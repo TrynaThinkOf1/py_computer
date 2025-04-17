@@ -22,7 +22,7 @@ class SSD:
         if not os.path.exists(self.storage_path):
             os.mkdir(self.storage_path)
         else:
-            error_msg: str = f"Cannot create SSD {device_name} because that space is allocated to another SSD.\n\t\t\t\tTry changing the device name."
+            error_msg: str = f"Cannot create SSD {device_name} because that space is allocated to another SSD.\n\t\t\t\tTry changing the device name"
             raise ssd_errors.DirectoryAlreadyExistsError(error_msg)
 
     def __str__(self):
@@ -32,15 +32,15 @@ class SSD:
     def __bool__(self):
         return self.currently_storing_size < self.max_storage_size
 
-    def _cleanup(self):
+    async def _cleanup(self):
         if os.path.exists(self.storage_path):
             shutil.rmtree(self.storage_path)
 
-    def delete(self):
+    async def delete(self):
         """
-        Permanently delete the SSD file system and object
+        Permanently delete the SSD filesystem and object
         """
-        self._cleanup()
+        await self._cleanup()
         del self
 
     def change_max_storage_size(self, new_max_storage_size: int) -> None:
@@ -51,15 +51,80 @@ class SSD:
         :return:
         """
         if new_max_storage_size < self.currently_storing_size:
-            error_msg: str = f"Cannot compress storage from {self.max_storage_size} bytes to {new_max_storage_size} bytes on SSD {self.device_name} because it is currently storing {self.currently_storing_size} bytes."
+            error_msg: str = f"Cannot compress storage from {self.max_storage_size} bytes to {new_max_storage_size} bytes on SSD {self.device_name} because it is currently storing {self.currently_storing_size} bytes"
             raise ssd_errors.StorageFullError(message=error_msg)
         else:
             self.max_storage_size = new_max_storage_size
 
-    def create_directory(self, parent_path: str, dir_name: str) -> None:
+    async def create_directory(self, parent_path: str, dir_name: str) -> None:
         """
         Create a directory inside this SSD's filesystem
-        :param parent_path:
-        :param dir_name:
+
+        :param parent_path: the root-directory where the new directory will be created
+        :param dir_name: the name of the new directory
         :return:
         """
+        path = os.path.join(self.storage_path, parent_path, dir_name)
+        if not os.path.exists(path):
+            os.mkdir(path)
+        else:
+            error_msg = f"Cannot create directory {dir_name} because the path {os.path.join(parent_path, dir_name)} already exists"
+            raise ssd_errors.DirectoryAlreadyExistsError(error_msg)
+
+    async def create_file(self, parent_directory_path: str, file_name: str) -> None:
+        """
+        Create a file inside this SSD's filesystem
+
+        :param directory_path: where the file will be located
+        :param file_name: what the file will be called
+        :return:
+        """
+        path = os.path.join(self.storage_path, parent_directory_path, file_name)
+        if not os.path.exists(path):
+            async with aiofiles.open(path, "w") as f:
+                await f.write("")
+        else:
+            error_msg = f"Cannot create file {file_name} because the path {os.path.join(parent_directory_path, file_name)} already exists"
+            raise ssd_errors.FileAlreadyExistsError(error_msg)
+
+    async def read_file(self, file_path: str, read_binary: bool = False) -> str | bytes:
+        """
+        Read from a file inside this SSD's filesystem
+
+        :param file_path: where the file is located
+        :param read_binary: whether or not to write the contens as binary content
+        :return: either the text content or the bytes content
+        """
+        path = os.path.join(self.storage_path, file_path)
+        if not os.path.exists(path):
+            error_msg = f"Cannot read file {file_path} because the path {file_path} does not exist"
+            raise ssd_errors.FileNotFoundError(error_msg)
+
+        if read_binary:
+            async with aiofiles.open(path, "rb") as f:
+                return await f.read()
+        else:
+            async with aiofiles.open(path, "r") as f:
+                return await f.read()
+
+    async def write_to_file(self, file_path: str, new_content: str | bytes, write_binary: bool = False) -> None:
+        """
+        Write new content to a file, completely erases old file contents
+        **READ & SAVE OLD FILE CONTENTS FIRST**
+
+        :param file_path: where the file is located
+        :param new_content: what is the content to be written to the file
+        :param write_binary:
+        :return:
+        """
+        path = os.path.join(self.storage_path, file_path)
+        if not os.path.exists(path):
+            error_msg = f"Cannot write to file {file_path.split("/")[-1]} because the path {file_path} does not exist"
+            raise ssd_errors.FileNotFoundError(error_msg)
+
+        if write_binary:
+            async with aiofiles.open(path, "wb") as f:
+                await f.write(new_content)
+        else:
+            async with aiofiles.open(path, "w") as f:
+                await f.write(new_content)
