@@ -1,5 +1,7 @@
 import os
-#import aiofiles
+import shutil
+import pathlib
+import aiofiles
 from typing import Optional
 
 import ssd_errors
@@ -12,16 +14,15 @@ class SSD:
         :param device_name: The name of THIS SSD device, that will be the base directory for the file system
         :param max_storage_size: How many bytes this SSD will store, default is 1000000 (1MB)
         """
-        self.device_name = device_name
-        self.storage_path: os.path = os.path.join("./storage", storage_dir_name)
+        self.device_name: str = device_name
+        self.storage_path: pathlib.Path = os.path.join("./storage", device_name)
         self.max_storage_size: int = max_storage_size
         self.currently_storing_size: int = 0
 
         if not os.path.exists(self.storage_path):
-            os.makedirs(self.storage_path)
+            os.mkdir(self.storage_path)
         else:
-            error_msg: str = f"Cannot create SSD {device_name} because that space is allocated to another SSD.\n\t\tTry changing the device name."
-            del self
+            error_msg: str = f"Cannot create SSD {device_name} because that space is allocated to another SSD.\n\t\t\t\tTry changing the device name."
             raise ssd_errors.DirectoryAlreadyExistsError(error_msg)
 
     def __str__(self):
@@ -30,8 +31,17 @@ class SSD:
         return self.__str__()
     def __bool__(self):
         return self.currently_storing_size < self.max_storage_size
-    def __del__(self):
-        os.remove(self.storage_path)
+
+    def _cleanup(self):
+        if os.path.exists(self.storage_path):
+            shutil.rmtree(self.storage_path)
+
+    def delete(self):
+        """
+        Permanently delete the SSD file system and object
+        """
+        self._cleanup()
+        del self
 
     def change_max_storage_size(self, new_max_storage_size: int) -> None:
         """
@@ -53,12 +63,3 @@ class SSD:
         :param dir_name:
         :return:
         """
-
-if __name__ == "__main__":
-    storage1 = SSD(device_name="storage1", max_storage_size=256000000000)
-    print(storage1)
-    print(storage1.__bool__())
-    print(storage1.max_storage_size)
-    print(storage1.currently_storing_size)
-    print(storage1.storage_path)
-    del storage1
