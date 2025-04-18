@@ -43,19 +43,6 @@ class SSD:
         await self._cleanup()
         del self
 
-    def change_max_storage_size(self, new_max_storage_size: int) -> None:
-        """
-        Change the amount of storage this SSD can have
-
-        :param new_max_storage_size: The new storage bytes amount
-        :return:
-        """
-        if new_max_storage_size < self.currently_storing_size:
-            error_msg: str = f"Cannot compress storage from {self.max_storage_size} bytes to {new_max_storage_size} bytes on SSD {self.device_name} because it is currently storing {self.currently_storing_size} bytes"
-            raise ssd_errors.StorageFullError(message=error_msg)
-        else:
-            self.max_storage_size = new_max_storage_size
-
     async def create_directory(self, parent_path: str, dir_name: str) -> None:
         """
         Create a directory inside this SSD's filesystem
