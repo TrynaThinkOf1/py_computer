@@ -1,6 +1,6 @@
 from sys import getsizeof as sizeof
 
-import ram_errors
+import hardware.ram.ram_errors as ram_errors
 
 class RAM:
     def __init__(self, stick_name: str, stick_num: int, max_mem_size: int = 1000000) -> None:
@@ -34,8 +34,6 @@ class RAM:
         """
         Add instructions to RAM
 
-        FOR ALL OPCODES - LOOK IN ../opcodes.txt
-
         instructions should be a list of instances of 4 binary digits per instruction
 
         :param instructions: a list of bytes that are machine code instructions
@@ -55,8 +53,6 @@ class RAM:
     def get_instruction(self, addr: int) -> list[int]:
         """
         Get an instruction from RAM
-        Deletes the instructions as soon as its gotten
-        
         :param addr: the address of the instruction
         :return: the instruction stored at the address
         """
@@ -64,7 +60,5 @@ class RAM:
         if instruction is None:
             error_msg = f"Cannot get instruction from address {addr} because it does not exist"
             raise ram_errors.MemoryNotFoundError(error_msg)
-
-        del self.memory[addr]
 
         return instruction

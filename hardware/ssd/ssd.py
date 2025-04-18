@@ -4,7 +4,7 @@ import pathlib
 import aiofiles
 from typing import Optional
 
-import ssd_errors
+import hardware.ssd.ssd_errors as ssd_errors
 
 class SSD:
     def __init__(self, device_name: Optional[str], max_storage_size: int = 1000000) -> None:
