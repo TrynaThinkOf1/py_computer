@@ -71,6 +71,20 @@ class SSD:
             error_msg = f"Cannot create directory {dir_name} because the path {os.path.join(parent_path, dir_name)} already exists"
             raise ssd_errors.DirectoryAlreadyExistsError(error_msg)
 
+    async def delete_directory(self, dir_path: str) -> None:
+        """
+        Delete a directory inside this SSD's filesystem
+
+        :param dir_path: where the directory to be deleted is located
+        :return:
+        """
+        path = os.path.join(self.storage_path, dir_path)
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        else:
+            error_msg = f"Cannot delete directory {dir_path} because the path {dir_path} does not exist"
+            raise ssd_errors.DirectoryDoesNotExistError(error_msg)
+
     async def create_file(self, parent_directory_path: str, file_name: str) -> None:
         """
         Create a file inside this SSD's filesystem
@@ -87,6 +101,20 @@ class SSD:
             error_msg = f"Cannot create file {file_name} because the path {os.path.join(parent_directory_path, file_name)} already exists"
             raise ssd_errors.FileAlreadyExistsError(error_msg)
 
+    async def delete_file(self, file_path: str) -> None:
+        """
+        Delete a file inside this SSD's filesystem
+
+        :param file_path: where the file is located
+        :return:
+        """
+        path = os.path.join(self.storage_path, file_path)
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            error_msg = f"Cannot delete file {file_path.split('/')[-1]} because the path {file_path} does not exist"
+            raise ssd_errors.FileNotFoundError(error_msg)
+
     async def read_file(self, file_path: str, read_binary: bool = False) -> str | bytes:
         """
         Read from a file inside this SSD's filesystem
@@ -98,7 +126,7 @@ class SSD:
         path = os.path.join(self.storage_path, file_path)
         if not os.path.exists(path):
             error_msg = f"Cannot read file {file_path} because the path {file_path} does not exist"
-            raise ssd_errors.FileNotFoundError(error_msg)
+            raise ssd_errors.File(error_msg)
 
         if read_binary:
             async with aiofiles.open(path, "rb") as f:
@@ -119,7 +147,7 @@ class SSD:
         """
         path = os.path.join(self.storage_path, file_path)
         if not os.path.exists(path):
-            error_msg = f"Cannot write to file {file_path.split("/")[-1]} because the path {file_path} does not exist"
+            error_msg = f"Cannot write to file {file_path.split('/')[-1]} because the path {file_path} does not exist"
             raise ssd_errors.FileNotFoundError(error_msg)
 
         if write_binary:
