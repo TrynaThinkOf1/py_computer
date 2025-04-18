@@ -7,7 +7,7 @@ from hardware.serial.serial_io import SerialIO
 from hardware.ssd.ssd import SSD
 from hardware.gpu.gpu import GPU
 
-import cpu_errors
+import hardware.cpu.cpu_errors as cpu_errors
 
 class CPU:
     def __init__(self, device_name: str, cores: int, accessible_ram: RAM, accessible_serial_io: SerialIO) -> None:
@@ -170,16 +170,3 @@ class CPU:
             case _:
                 error_msg = f"There is no register {output_reg}"
                 raise cpu_errors.InvalidRegisterError(error_msg)
-
-if __name__ == "__main__":
-    stick = RAM("stick1", 0, 1024)
-    stick.add_instruction(["0000", "0000", "0100"]) # move the number from address 0x4 to register 0
-    stick.add_instruction(["0000", "0001", "0101"]) # move the number from address 0x5 to register 1
-    stick.add_instruction(["0001", "0000", "0001", "0010"]) # put the sum of reg 0 and reg 1 into reg 2
-    stick.add_instruction(["0111"]) # add the number 7 to address 0x4
-    stick.add_instruction(["0011"]) # add the number 3 to address 0x5
-
-    serial = SerialIO
-
-    cpu = CPU("ryzen", 6, stick, serial)
-    print(cpu.reg_2)

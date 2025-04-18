@@ -1,0 +1,15 @@
+# first move the number from address 0x2 into register 0
+# then add the number 3 into address 0x2
+
+# next move the number from address 0x4 into register 1
+# then add the number 7 into address 0x4
+
+# finally add the number from register 0 to the number from register 1 and send the output to register 2
+# print the number from register 2
+
+0000    0000    0010
+0011
+0000    0001    0100
+0111
+0001    0000    0001    0010
+#0010    0010
