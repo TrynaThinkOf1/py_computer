@@ -25,6 +25,12 @@ class CPU:
         self.reg_1 = None
         self.reg_2 = None
         self.reg_3 = None
+        self.reg_4 = None
+        self.reg_5 = None
+        self.reg_6 = None
+        self.reg_7 = None
+
+        self.regs = [self.reg_0, self.reg_1, self.reg_2, self.reg_3, self.reg_4, self.reg_5, self.reg_6, self.reg_7]
 
         self.ram = accessible_ram
         self.serial_io = accessible_serial_io
@@ -45,6 +51,7 @@ class CPU:
         self._cycle()
 
     def _cycle(self) -> None:
+        self.reg_0, self.reg_1, self.reg_2, self.reg_3, self.reg_4, self.reg_5, self.reg_6, self.reg_7 = self.regs
         self.cycle += 1
         self.get_next_instruction()
 
@@ -87,6 +94,10 @@ class CPU:
             print(f"Register 1: {self.reg_1}")
             print(f"Register 2: {self.reg_2}")
             print(f"Register 3: {self.reg_3}")
+            print(f"Register 4: {self.reg_4}")
+            print(f"Register 5: {self.reg_5}")
+            print(f"Register 6: {self.reg_6}")
+            print(f"Register 7: {self.reg_7}")
             exit(0)
         self.execute()
 
@@ -106,7 +117,7 @@ class CPU:
         idx1 = self._count_binary_half_byte(idx1)
         addr = f"0x{self._count_binary_half_byte(addr)}"
 
-        regs = [self.reg_0, self.reg_1, self.reg_2, self.reg_3]
+        regs = self.regs
 
         if idx1 < 0 or idx1 > len(regs):
             error_msg = f"Register index out of range: {idx1}"
@@ -115,7 +126,7 @@ class CPU:
         instr = self.ram.get_instruction(addr)
         regs[idx1] = instr[0]
 
-        self.reg_0, self.reg_1, self.reg_2, self.reg_3 = regs # this unpacking makes all the values fall into place
+        self.regs = regs # this unpacking makes all the values fall into place
 
         self._cycle()
 
@@ -124,7 +135,7 @@ class CPU:
         idx2 = self._count_binary_half_byte(idx2)
         idxo = self._count_binary_half_byte(idxo)
 
-        regs = [self.reg_0, self.reg_1, self.reg_2, self.reg_3]
+        regs = self.regs
 
         if idx1 < 0 or idx1 > len(regs):
             error_msg = f"Register index out of range: {idx1}"
@@ -142,6 +153,6 @@ class CPU:
         op = str(bin(num1 + num2)).removeprefix("0b")
         regs[idxo] = op
 
-        self.reg_0, self.reg_1, self.reg_2, self.reg_3 = regs
+        self.regs = regs
 
         self._cycle()
