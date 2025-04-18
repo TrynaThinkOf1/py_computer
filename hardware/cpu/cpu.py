@@ -38,12 +38,12 @@ class CPU:
         self.cycle = 0
 
         self.instruction_set = {
-            0: lambda idx1, addr: self.MOV(idx1, addr),
+            0: lambda idx1, addr, immediate=None: self.MOV(idx1, addr, immediate),
             1: lambda reg1, reg2, output_reg: self.ADD(reg1, reg2, output_reg),
             2: lambda reg1, reg2, output_reg: self.SUB(reg1, reg2, output_reg),
             3: lambda reg1, reg2, output_reg: self.MUL(reg1, reg2, output_reg),
             4: lambda reg1, reg2, output_reg: self.DIV(reg1, reg2, output_reg),
-            5: lambda reg1: self.PRINT(reg1)
+            5: lambda reg1: self.OUT(reg1)
         }
 
         self.current_instruction = None
@@ -56,30 +56,7 @@ class CPU:
         self.get_next_instruction()
 
     def _count_binary_half_byte(self, instruction: str) -> int:
-        code = 0
-
-        digits = list(reversed(list(instruction)))
-
-        for i in range(len(digits)):
-            if digits[i] == "1":
-                match i:
-                    case 0:
-                        code += 1
-                    case 1:
-                        code += 2
-                    case 2:
-                        code += 4
-                    case 3:
-                        code += 8
-                    case 4:
-                        code += 16
-                    case 5:
-                        code += 32
-                    case 6:
-                        code += 64
-                    case 7:
-                        code += 128
-
+        code = int(instruction, 2)
         return code
 
     def get_next_instruction(self) -> None:
@@ -113,18 +90,21 @@ class CPU:
             error_msg = f"The instruction {instructions[0]} is not a valid operation"
             raise cpu_errors.InvalidInstructionError(error_msg)
 
-    def MOV(self, idx1: str, addr: str) -> None:
+    def MOV(self, idx1: str, addr: str, immediate: int | None = None) -> None:
         idx1 = self._count_binary_half_byte(idx1)
-        addr = f"0x{self._count_binary_half_byte(addr)}"
 
         regs = self.regs
+        if immediate is None:
+            addr = f"0x{self._count_binary_half_byte(addr)}"
 
-        if idx1 < 0 or idx1 > len(regs):
-            error_msg = f"Register index out of range: {idx1}"
-            raise cpu_errors.InvalidRegisterError(error_msg)
+            if idx1 < 0 or idx1 > len(regs):
+                error_msg = f"Register index out of range: {idx1}"
+                raise cpu_errors.InvalidRegisterError(error_msg)
 
-        instr = self.ram.get_instruction(addr)
-        regs[idx1] = instr[0]
+            instr = self.ram.get_instruction(addr)
+            regs[idx1] = instr[0]
+        else:
+            regs[idx1] = self._count_binary_half_byte(immediate)
 
         self.regs = regs # this unpacking makes all the values fall into place
 
@@ -150,9 +130,99 @@ class CPU:
         num1 = self._count_binary_half_byte(regs[idx1])
         num2 = self._count_binary_half_byte(regs[idx2])
 
-        op = str(bin(num1 + num2)).removeprefix("0b")
+        op = str(bin(num1 + num2))[2:]
         regs[idxo] = op
 
         self.regs = regs
 
         self._cycle()
+
+    def SUB(self, idx1: str, idx2: str, idxo: str) -> None:
+        idx1 = self._count_binary_half_byte(idx1)
+        idx2 = self._count_binary_half_byte(idx2)
+        idxo = self._count_binary_half_byte(idxo)
+
+        regs = self.regs
+
+        if idx1 < 0 or idx1 > len(regs):
+            error_msg = f"Register index out of range: {idx1}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+        if idx2 < 0 or idx2 > len(regs):
+            error_msg = f"Register index out of range: {idx2}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+        if idxo < 0 or idxo > len(regs):
+            error_msg = f"Register index out of range: {idxo}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+
+        num1 = self._count_binary_half_byte(regs[idx1])
+        num2 = self._count_binary_half_byte(regs[idx2])
+
+        op = str(bin(num1 - num2))[2:]
+        regs[idxo] = op
+
+        self.regs = regs
+
+        self._cycle()
+
+    def MUL(self, idx1: str, idx2: str, idxo: str) -> None:
+        idx1 = self._count_binary_half_byte(idx1)
+        idx2 = self._count_binary_half_byte(idx2)
+        idxo = self._count_binary_half_byte(idxo)
+
+        regs = self.regs
+
+        if idx1 < 0 or idx1 > len(regs):
+            error_msg = f"Register index out of range: {idx1}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+        if idx2 < 0 or idx2 > len(regs):
+            error_msg = f"Register index out of range: {idx2}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+        if idxo < 0 or idxo > len(regs):
+            error_msg = f"Register index out of range: {idxo}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+
+        num1 = self._count_binary_half_byte(regs[idx1])
+        num2 = self._count_binary_half_byte(regs[idx2])
+
+        op = str(bin(num1 * num2))[2:]
+        regs[idxo] = op
+
+        self.regs = regs
+
+        self._cycle()
+
+    def DIV(self, idx1: str, idx2: str, idxo: str) -> None:
+        idx1 = self._count_binary_half_byte(idx1)
+        idx2 = self._count_binary_half_byte(idx2)
+        idxo = self._count_binary_half_byte(idxo)
+
+        regs = self.regs
+
+        if idx1 < 0 or idx1 > len(regs):
+            error_msg = f"Register index out of range: {idx1}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+        if idx2 < 0 or idx2 > len(regs):
+            error_msg = f"Register index out of range: {idx2}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+        if idxo < 0 or idxo > len(regs):
+            error_msg = f"Register index out of range: {idxo}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+
+        num1 = self._count_binary_half_byte(regs[idx1])
+        num2 = self._count_binary_half_byte(regs[idx2])
+
+        op = str(bin(num1 / num2))[2:]
+        regs[idxo] = op
+
+        self.regs = regs
+
+        self._cycle()
+
+    def OUT(self, idxo: str) -> None:
+        idxo = self._count_binary_half_byte(idxo)
+
+        if idxo < 0 or idxo > len(self.regs):
+            error_msg = f"Register index out of range: {idxo}"
+            raise cpu_errors.InvalidRegisterError(error_msg)
+
+        self.serial_io.output(self.serial_io, int(self.regs[idxo], 2))
