@@ -35,11 +35,13 @@ def _create_machine_code_instructions(token_set: list[list[str]]) -> list[list[s
         "MOV": "10", # 2
         "DEL": "11", # 3
         "INS": "100", # 4
-        "OUT": "101", # 5
+        # skip 5 because thats PTR
+        "OUT": "110", # 6
     }
 
     convert_imm = lambda imm: bin(int(imm.removeprefix("$")))[2:]
     convert_reg = lambda reg: bin(int(reg.removeprefix("reg")))[2:]
+    convert_addr = lambda addr: bin(int(addr.removeprefix("0x")))[2:]
 
     for tokens in token_set:
         machine_code_instructions.append([])
@@ -50,6 +52,15 @@ def _create_machine_code_instructions(token_set: list[list[str]]) -> list[list[s
 
             if token.startswith("reg"):
                 machine_code_instructions[-1].append(convert_reg(token))
+                continue
+
+            if token.startswith("*"):
+                reg = convert_reg(token[1:]) # remove the *
+                machine_code_instructions[-1].append(None) # so that there is no imm
+                machine_code_instructions[-1].append(["101", reg])
+
+            if token.startswith("0x"):
+                machine_code_instructions[-1].append(convert_addr(token))
                 continue
 
             if token.startswith("$"):

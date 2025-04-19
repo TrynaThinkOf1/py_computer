@@ -17,6 +17,8 @@ class InvalidAddressError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
 
+
+
 class RAM:
     def __init__(self):
         self.memory = {}
@@ -24,14 +26,10 @@ class RAM:
     def get(self, addr: str) -> Any:
         return self.memory.get(addr)
 
-    def insert(self, val: Any, addr: Optional[str] = None) -> str:
-        if addr is None:
-            addr = f"0x{len(self.memory) + 1}"
-            self.memory[addr] = val
-            return addr
-        else:
-            self.memory[addr] = val
-            return addr
+    def insert(self, val: Any) -> str:
+        addr = f"0x{len(self.memory) + 1}"
+        self.memory[addr] = val
+        return addr
 
     def delete(self, addr: str) -> None:
         del self.memory[addr]
@@ -53,10 +51,11 @@ class CPU():
 
         self.instruction_set = {
             "1": lambda code=0: self.EXT(code),
-            "10": lambda reg, imm=None, addr=None: self.MOV(reg, imm, addr),
-            "11": lambda addr: self.DEL(addr),
-            "100": lambda val, addr=None: self.INS(val, addr),
-            "101": lambda reg: self.OUT(reg)
+            "10": lambda sto_reg, imm=None, addr=None: self.MOV(sto_reg, imm, addr),
+            "11": lambda this_will_be_none_bc_pointer_stuff, addr: self.DEL(addr),
+            "100": lambda val_reg, sto_reg: self.INS(val_reg, sto_reg),
+            # skip 5 because thats PTR
+            "110": lambda reg: self.OUT(reg)
         }
 
         self.cycle = 0
@@ -69,7 +68,7 @@ class CPU():
 
     def _get_next_instruction(self):
         addr = f"0x{self.cycle}"
-        self.current_instruction = self.ram.get(addr)
+        self.current_instruction = self.ram.get(addr=addr)
         if self.current_instruction is None:
             error_msg = "Program ran out of instructions"
             raise OutOfInstructionsError(error_msg)
@@ -88,24 +87,60 @@ class CPU():
 
         exit(code)
 
-    def MOV(self, reg: str, imm: str, addr: str):
-        reg = int(reg, 2)
+    def MOV(self, sto_reg: str, imm: str, addr: str | list):
+        sto_reg = int(sto_reg, 2)
 
         regs = self.regs
 
-        if reg < 0 or reg > len(regs):
+        if sto_reg < 0 or sto_reg > len(regs):
             error_msg = f"Invalid register assignment on line {self.cycle}"
             raise InvalidRegisterError(error_msg)
 
         if imm is not None:
-            regs[reg] = imm
+            regs[sto_reg] = imm
         else:
-            addr = f"0x{int(addr, 2)}"
+            ptr_reg = int(addr[1], 2)
+
+            if ptr_reg < 0 or ptr_reg > len(regs):
+                error_msg = f"Invalid register assignment on line {self.cycle}"
+                raise InvalidRegisterError(error_msg)
+
+            addr = regs[ptr_reg]
             num = self.ram.get(addr)
             if num is None:
                 error_msg = f"Invalid RAM address on line {self.cycle}"
                 raise InvalidAddressError(error_msg)
-            regs[reg] = num
+            regs[sto_reg] = num
+
+        self.regs = regs
+
+        self._cycle()
+
+    def DEL(self, addr: list):
+        addr = f"0x{int(addr[1], 2)}"
+
+        self.ram.delete(addr=addr)
+
+        self._cycle()
+
+    def INS(self, val_reg: str, sto_reg: str) -> str:
+        val_reg = int(val_reg, 2)
+        sto_reg = int(sto_reg, 2)
+
+        regs = self.regs
+
+        if val_reg < 0 or val_reg > len(regs):
+            error_msg = f"Invalid register assignment on line {self.cycle}"
+            raise InvalidRegisterError(error_msg)
+
+        if sto_reg < 0 or sto_reg > len(regs):
+            error_msg = f"Invalid register assignment on line {self.cycle}"
+            raise InvalidRegisterError(error_msg)
+
+        val = regs[val_reg]
+
+        addr = self.ram.insert(val=val)
+        regs[sto_reg] = addr
 
         self.regs = regs
 

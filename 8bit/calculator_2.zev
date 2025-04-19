@@ -11,4 +11,8 @@
 
 MOV    reg0    $5
 OUT    reg0
+INS    reg0    reg1    # insert into RAM the value of reg 0, store the address in reg 1
+MOV    reg2    *reg1    # this is using a pointer, so the pointer to an address is stored in register 1
+OUT    reg2
+DEL    *reg1
 EXT    $3
