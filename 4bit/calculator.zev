@@ -1,0 +1,10 @@
+MOV    idx0    %9              # move the (immediate) number 9 into register 0
+OUT    idx0                    # output the number in register 0
+MOV    idx1    %3              # move the (immediate) number 3 into register 1
+OUT    idx1                    # output the number in register 1
+ADD    idx0    idx1    idx3    # add the number in register 0 to register 1, send output to register 2
+OUT    idx3                    # output the number in register 2
+MOV    idx0    %6              # move the (immediate) number 6 into register 0
+DIV    idx3    idx0    idx1    # divide the number in register 3 by the number in register 0, send ouput to register 1
+OUT    idx1                    # output the number in register 1
+SYSCALL    EXIT    %13;        # exit the program with (immediate) code 13

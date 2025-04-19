@@ -1,0 +1,8 @@
+# this whole program aims to get a mathematical result of 10 by taking the sum of 6 and 24, then dividing it by 3
+
+MOV    reg0    $24    # move (immediate int) 24 into reg 0
+MOV    reg1    $6    # move (immediate int) 6 into reg 1
+MOV    reg3    $3    # move (immediate int) 3 into reg 3
+ADD    reg0    reg1    reg2    # add the num in reg 0 to the num in reg 1, store result in reg 2
+DIV    reg2    reg3    reg4    # divide the num in reg 2 by the num in reg 3, store result in reg 4
+OUT    reg4    # print the num in reg 4 to console

@@ -1,6 +1,5 @@
 from sys import getsizeof as sizeof
 
-import hardware.ram.ram_errors
 
 class GPU_RAM:
     def __init__(self, stick_name: str, stick_num: int, max_mem_size: int = 1000000) -> None:

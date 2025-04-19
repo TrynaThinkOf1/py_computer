@@ -15,7 +15,7 @@ class SSD:
         :param max_storage_size: How many bytes this SSD will store, default is 1000000 (1MB)
         """
         self.device_name: str = device_name
-        self.storage_path: pathlib.Path = os.path.join("./storage", device_name)
+        self.storage_path: pathlib.Path = os.path.join("storage", device_name)
         self.max_storage_size: int = max_storage_size
         self.currently_storing_size: int = 0
 

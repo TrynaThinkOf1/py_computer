@@ -1,7 +1,0 @@
-MOV    idx0    %9    # move the (immediate) number 9 into register 0
-OUT    idx0
-MOV    idx7    %3    # move the (immediate) number 3 into register 1
-OUT    idx7
-#MOV    idx4    0x7
-ADD    idx0    idx7    idx2    # add the number from register 0 to register 1, send output to register 2
-OUT    idx2
