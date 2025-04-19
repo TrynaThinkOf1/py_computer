@@ -13,14 +13,16 @@ def _get_tokens(lines: list[str]) -> list[list[str]]:
             error_msg = f"Inconsistent use of tabs and spaces: [{line}] @ [line no.]: {lines.index(line) + 1}"
             raise SyntaxError(error_msg)
         elif "    " in line:
-            unproc_token_sets.append(line.removesuffix("\n").split("    "))
+            if not line.startswith("#"): # filter out full-line comments
+                unproc_token_sets.append(line.removesuffix("\n").split("    "))
         elif "\\t" in line:
-            unproc_token_sets.append(line.removesuffix("\n").split("\\t"))
+            if not line.startswith("#"):
+                unproc_token_sets.append(line.removesuffix("\n").split("\\t"))
 
     for i in range(len(unproc_token_sets)):
         proc_token_sets.append([])
         for j in range(len(unproc_token_sets[i])):
-            if not unproc_token_sets[i][j].startswith("#"): # filter out comments
+            if not unproc_token_sets[i][j].startswith("#"): # filter out after-code comments
                 proc_token_sets[i].append(unproc_token_sets[i][j])
 
     return proc_token_sets
