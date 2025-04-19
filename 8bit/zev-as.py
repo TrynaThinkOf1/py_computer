@@ -74,10 +74,8 @@ def compile(filename: str):
         lines = f.readlines()
 
     token_sets = _get_tokens(lines)
-    print(token_sets)
 
     machine_code_instructions = _create_machine_code_instructions(token_sets)
-    print(machine_code_instructions)
 
     link(machine_code_instructions, f"{filename.split(".")[0]}.py")
 

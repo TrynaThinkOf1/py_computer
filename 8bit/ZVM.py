@@ -62,6 +62,69 @@ class CPU():
 
         self._cycle()
 
+    def _add_two_binary(self, n1: str, n2: str) -> str:
+        maxlen = max(len(n1), len(n2))
+        n1 = n1.zfill(maxlen)
+        n2 = n2.zfill(maxlen)
+
+        added = []
+        carry = 0
+        for i in range(maxlen - 1, -1, -1):
+            total = int(n1[i]) + int(n2[i]) + carry
+            added.append(str(total % 2))
+            carry = total // 2
+
+        if carry:
+            added.append("1")
+
+
+        return "".join(reversed(added)).lstrip("0") or "0"
+
+    def _sub_two_binary(self, n1: str, n2: str) -> str:
+        # 0) Helper to compare magnitudes
+        def is_smaller(a: str, b: str) -> bool:
+            a = a.lstrip('0') or '0'
+            b = b.lstrip('0') or '0'
+            if len(a) != len(b):
+                return len(a) < len(b)
+            return a < b
+
+        # 1) Handle negativity by swapping if needed
+        negative = False
+        if is_smaller(n1, n2):
+            n1, n2 = n2, n1
+            negative = True
+
+        # 2) Pad to equal length
+        maxlen = max(len(n1), len(n2))
+        n1 = n1.zfill(maxlen)
+        n2 = n2.zfill(maxlen)
+
+        result = []
+        borrow = 0
+
+        # 3) Subtract bit-by-bit, LSB→MSB
+        for i in range(maxlen - 1, -1, -1):
+            b1 = int(n1[i])
+            b2 = int(n2[i])
+            diff = b1 - (b2 + borrow)
+            if diff < 0:
+                diff += 2
+                borrow = 1
+            else:
+                borrow = 0
+            result.append(str(diff))
+
+        # 4) Assemble, strip leading zeros, handle zero result
+        res_str = ''.join(reversed(result)).lstrip('0') or '0'
+        return ('-' + res_str) if negative else res_str
+
+    def _validate_regs(self, regs: list):
+        for i in range(len(regs)):
+            if regs[i] < 0 or regs[i] > len(self.regs):
+                error_msg = f"Invalid register assignment on line {self.cycle}"
+                raise InvalidRegisterError(error_msg)
+
     def _cycle(self):
         self.cycle += 1
         self._get_next_instruction()
@@ -92,9 +155,7 @@ class CPU():
 
         regs = self.regs
 
-        if sto_reg < 0 or sto_reg > len(regs):
-            error_msg = f"Invalid register assignment on line {self.cycle}"
-            raise InvalidRegisterError(error_msg)
+        self._validate_regs([sto_reg])
 
         if imm is not None:
             regs[sto_reg] = imm
@@ -117,7 +178,11 @@ class CPU():
         self._cycle()
 
     def DEL(self, addr: list):
-        addr = f"0x{int(addr[1], 2)}"
+        reg = int(addr[1], 2)
+
+        self._validate_regs([reg])
+
+        addr = self.regs[reg]
 
         self.ram.delete(addr=addr)
 
@@ -129,13 +194,7 @@ class CPU():
 
         regs = self.regs
 
-        if val_reg < 0 or val_reg > len(regs):
-            error_msg = f"Invalid register assignment on line {self.cycle}"
-            raise InvalidRegisterError(error_msg)
-
-        if sto_reg < 0 or sto_reg > len(regs):
-            error_msg = f"Invalid register assignment on line {self.cycle}"
-            raise InvalidRegisterError(error_msg)
+        self._validate_regs([val_reg, sto_reg])
 
         val = regs[val_reg]
 
@@ -150,10 +209,60 @@ class CPU():
     def OUT(self, reg: str):
         reg = int(reg, 2)
 
-        if reg < 0 or reg > len(self.regs):
-            error_msg = f"Invalid register assignment on line {self.cycle}"
-            raise InvalidRegisterError(error_msg)
+        self._validate_regs([reg])
 
         print(self.regs[reg])
+
+        self._cycle()
+
+    def ADD(self, first_reg: str, second_reg: str, sto_reg: str):
+        first_reg = int(first_reg, 2)
+        second_reg = int(second_reg, 2)
+        sto_reg = int(sto_reg, 2)
+
+        regs = self.regs
+
+        self._validate_regs([first_reg, second_reg, sto_reg])
+
+        num1 = regs[first_reg]
+        num2 = regs[second_reg]
+
+        if num1 is None:
+            error_msg = f"Empty register assignment on line {self.cycle}"
+            raise InvalidRegisterError(error_msg)
+        if num2 is None:
+            error_msg = f"Empty register assignment on line {self.cycle}"
+            raise InvalidRegisterError(error_msg)
+
+        result = self._add_two_binary(num1, num2)
+        regs[sto_reg] = result
+
+        self.regs = regs
+
+        self._cycle()
+
+    def SUB(self, first_reg: str, second_reg: str, sto_reg: str):
+        first_reg = int(first_reg, 2)
+        second_reg = int(second_reg, 2)
+        sto_reg = int(sto_reg, 2)
+
+        regs = self.regs
+
+        self._validate_regs([first_reg, second_reg, sto_reg])
+
+        num1 = regs[first_reg]
+        num2 = regs[second_reg]
+
+        if num1 is None:
+            error_msg = f"Empty register assignment on line {self.cycle}"
+            raise InvalidRegisterError(error_msg)
+        if num2 is None:
+            error_msg = f"Empty register assignment on line {self.cycle}"
+            raise InvalidRegisterError(error_msg)
+
+        result = self._sub_two_binary(num1, num2)
+        regs[sto_reg] = result
+
+        self.regs = regs
 
         self._cycle()

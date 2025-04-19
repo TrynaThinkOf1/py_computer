@@ -1,18 +1,17 @@
 # this whole program aims to get a mathematical result of 10 by taking the sum of 6 and 24, then dividing it by 3
+# but it also tests every instruction the ZVM can handle in the process
 
-#MOV    reg0    $24    # move (immediate int) 24 into reg 0
-#MOV    reg1    $6    # move (immediate int) 6 into reg 1
-#MOV    reg3    $3    # move (immediate int) 3 into reg 3
-#ADD    reg0    reg1    reg2    # add the num in reg 0 to the num in reg 1, store result in reg 2
-#DIV    reg2    reg3    reg4    # divide the num in reg 2 by the num in reg 3, store result in reg 4
-#OUT    reg4    # print the num in reg 4 to console
+MOV    reg0    $24    # move the imm. int 24 into reg. 0
+INS    reg0    reg1    # store the num. in reg. 0 inside of RAM, sending the ptr. address to reg. 1
+MOV    reg0    $6    # reuse reg. 0 to store the imm. int 6
+INS    reg0    reg2    # store the num. in reg. 0 inside of RAM, sending the ptr. address to reg. 2
 
-# this is the part for just testing
+MOV    reg0    *reg1    # move the num. in RAM with the address ptr. stored in reg1 into reg. 0
+DEL    *reg1    # free up RAM by removing the value who's address ptr. is stored in reg. 1
+MOV    reg1    *reg2    # reuse reg. 1 to store the value in RAM who's address ptr. is stored in reg. 2
+DEL    *reg2    # free up RAM
 
-MOV    reg0    $5
-OUT    reg0
-INS    reg0    reg1    # insert into RAM the value of reg 0, store the address in reg 1
-MOV    reg2    *reg1    # this is using a pointer, so the pointer to an address is stored in register 1
-OUT    reg2
-DEL    *reg1
-EXT    $3
+OUT    reg0    # print the value stored in reg. 0
+OUT    reg1
+
+EXT    $0    # exit cleanly with code 0
